@@ -264,7 +264,7 @@ class TextDataset(Dataset):
 
         label_ = self.examples[i].label
 
-        return torch.tensor(adj), torch.tensor(adj_mask), torch.tensor(adj_feature), torch.tensor(label_)
+        return torch.tensor(np.array(adj)), torch.tensor(np.array(adj_mask)), torch.tensor(np.array(adj_feature)), torch.tensor(label_)
 
 
 def set_seed(seed=42):
