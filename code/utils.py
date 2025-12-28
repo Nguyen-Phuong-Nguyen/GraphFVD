@@ -1,10 +1,13 @@
 import numpy as np
 import pickle as pkl
 import scipy.sparse as sp
-from scipy.sparse.linalg.eigen.arpack import eigsh
+# Fixed for scipy >= 1.8 compatibility
+try:
+    from scipy.sparse.linalg import eigsh
+except ImportError:
+    from scipy.sparse.linalg.eigen.arpack import eigsh
 import sys
 import random
-import re
 import re
 from io import StringIO
 import tokenize
@@ -229,9 +232,9 @@ def clean_str(string):
     string = re.sub(r"\'ll", " \'ll", string)
     string = re.sub(r",", " , ", string)
     string = re.sub(r"!", " ! ", string)
-    string = re.sub(r"\(", " \( ", string)
-    string = re.sub(r"\)", " \) ", string)
-    string = re.sub(r"\?", " \? ", string)
+    string = re.sub(r"\(", r" \( ", string)
+    string = re.sub(r"\)", r" \) ", string)
+    string = re.sub(r"\?", r" \? ", string)
     string = re.sub(r"\s{2,}", " ", string)
     return string.strip().lower()
 
