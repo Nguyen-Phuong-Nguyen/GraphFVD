@@ -560,15 +560,15 @@ def main():
     parser = argparse.ArgumentParser()
 
     ## Required parameters
-    parser.add_argument("--train_data_file", default="../dataset/my_train.jsonl", type=str,
+    parser.add_argument("--train_data_file", default="/kaggle/working/GraphFVD/dataset/NVD/my_train.jsonl", type=str,
                         help="The input training data file (a text file).")
     parser.add_argument("--output_dir", default="./saved_models", type=str,
                         help="The output directory where the model predictions and checkpoints will be written.")
 
     ## Other parameters
-    parser.add_argument("--eval_data_file", default="../dataset/my_valid.jsonl", type=str,
+    parser.add_argument("--eval_data_file", default="/kaggle/working/GraphFVD/dataset/NVD/my_valid.jsonl", type=str,
                         help="An optional input evaluation data file to evaluate the perplexity on (a text file).")
-    parser.add_argument("--test_data_file", default="../dataset/my_test.jsonl", type=str,
+    parser.add_argument("--test_data_file", default="/kaggle/working/GraphFVD/dataset/NVD/my_test.jsonl", type=str,
                         help="An optional input evaluation data file to evaluate the perplexity on (a text file).")
                     
     parser.add_argument("--model_type", default="roberta", type=str,
@@ -669,16 +669,16 @@ def main():
     parser.add_argument("--alpha_weight", default=1., type=float, help="percet of training sample")
 
     input_argument = [
-        "--output_dir", "./saved_models",
+        "--output_dir", "/kaggle/working/GraphFVD/outputs",  # All outputs saved here
         "--model_type", "roberta",
         "--tokenizer_name", "microsoft/graphcodebert-base",  
         "--model_name_or_path", "microsoft/graphcodebert-base",
         "--do_eval",
         "--do_test",
         "--do_train",
-        "--train_data_file", "../dataset/NVD/my_train.jsonl",
-        "--eval_data_file", "../dataset/NVD/my_valid.jsonl",
-        "--test_data_file", "../dataset/NVD/my_test.jsonl",
+        "--train_data_file", "/kaggle/working/GraphFVD/dataset/NVD/my_train.jsonl",
+        "--eval_data_file", "/kaggle/working/GraphFVD/dataset/NVD/my_valid.jsonl",
+        "--test_data_file", "/kaggle/working/GraphFVD/dataset/NVD/my_test.jsonl",
         "--block_size", "400",
         "--train_batch_size", "32",
         "--eval_batch_size", "32",
