@@ -200,7 +200,8 @@ def build_graph(node_idxs, nodes_edges, num_nodes, edges_label, w_embeddings, ar
         emb_seq = []
         for token in node_idx:
             emb_seq.append(w_embeddings[token])
-        emb_seq = torch.tensor(emb_seq)
+        # Convert to numpy array first for faster tensor creation
+        emb_seq = torch.tensor(np.array(emb_seq))
         features_out.append(emb_seq)
 
     return adj_list, features_out
@@ -341,12 +342,16 @@ def train(args, train_dataset, eval_dataset, model, tokenizer):
     model.zero_grad()
 
     my_metrics = []
-    for idx in range(args.start_epoch, int(args.num_train_epochs)):
+    # Wrap epoch loop with tqdm
+    epoch_bar = tqdm(range(args.start_epoch, int(args.num_train_epochs)), desc="Epochs", position=0)
+    for idx in epoch_bar:
         tr_num = 0
         train_loss = 0
 
-        # for step, batch in enumerate(bar):
-        for step, batch in enumerate(train_dataloader):
+        # Wrap batch loop with tqdm
+        batch_bar = tqdm(enumerate(train_dataloader), total=len(train_dataloader), 
+                         desc=f"Epoch {idx+1}", position=1, leave=False)
+        for step, batch in batch_bar:
             adj = batch[0].to(args.device)
             adj_mask = batch[1].to(args.device)
             adj_feature = batch[2].to(args.device)
@@ -374,6 +379,9 @@ def train(args, train_dataset, eval_dataset, model, tokenizer):
             if avg_loss==0:
                 avg_loss=tr_loss
             avg_loss=round(train_loss/tr_num,5)
+            
+            # Update progress bar with current loss
+            batch_bar.set_postfix(loss=avg_loss)
                 
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 optimizer.step()
