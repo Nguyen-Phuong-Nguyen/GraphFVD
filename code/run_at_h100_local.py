@@ -14,7 +14,8 @@ import csv
 from torch.utils.data import DataLoader, Dataset, SequentialSampler, RandomSampler,TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 from torch_geometric.data import Data
-from sklearn.metrics import roc_auc_score
+# --- [MODIFIED BY KHANG'S REQUEST] Added confusion_matrix ---
+from sklearn.metrics import roc_auc_score, confusion_matrix 
 import json
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -477,6 +478,23 @@ def evaluate(args, eval_dataset, model, tokenizer, eval_when_training=False):
     labels = np.concatenate(labels,0)
     preds = logits[:,0]>0.5
 
+    # --- [MODIFIED BY KHANG'S REQUEST] Calculate and Print Confusion Matrix ---
+    try:
+        cm = confusion_matrix(labels, preds)
+        print("\n" + "="*40)
+        print(f" >>> CONFUSION MATRIX (Eval/Test) <<<")
+        print(f"[[TN, FP],\n [FN, TP]]")
+        print("-" * 20)
+        print(cm)
+        if cm.shape == (2, 2):
+            tn, fp, fn, tp = cm.ravel()
+            print(f"TN (Sạch-Đúng): {tn} | FP (Báo-Giả): {fp}")
+            print(f"FN (Sót-Lỗi):   {fn} | TP (Bắt-Lỗi): {tp}")
+        print("="*40 + "\n")
+    except Exception as e:
+        print(f"Error calculating Confusion Matrix: {e}")
+    # --------------------------------------------------------------------------
+
     eval_acc = np.mean(labels==preds)
     eval_loss = eval_loss / nb_eval_steps
     perplexity = torch.tensor(eval_loss)
@@ -530,6 +548,23 @@ def test(args, eval_dataset, model, tokenizer):
     labels=np.concatenate(labels,0)
     preds=logits[:,0]>0.5
 
+    # --- [MODIFIED BY KHANG'S REQUEST] Calculate and Print Confusion Matrix for Test ---
+    try:
+        cm = confusion_matrix(labels, preds)
+        print("\n" + "="*40)
+        print(f" >>> TEST SET CONFUSION MATRIX <<<")
+        print(f"[[TN, FP],\n [FN, TP]]")
+        print("-" * 20)
+        print(cm)
+        if cm.shape == (2, 2):
+            tn, fp, fn, tp = cm.ravel()
+            print(f"TN (Sạch-Đúng): {tn} | FP (Báo-Giả): {fp}")
+            print(f"FN (Sót-Lỗi):   {fn} | TP (Bắt-Lỗi): {tp}")
+        print("="*40 + "\n")
+    except Exception as e:
+        print(f"Error calculating Confusion Matrix: {e}")
+    # -----------------------------------------------------------------------------------
+
     test_acc=np.mean(labels==preds)
     # 计算精确率和召回率，AUC
     test_precision, test_recall, test_f1, test_FPR, test_FNR = p_r_f1(labels, preds)
@@ -556,15 +591,15 @@ def main():
     parser = argparse.ArgumentParser()
 
     ## Required parameters
-    parser.add_argument("--train_data_file", default="dataset/NVD/my_train.jsonl", type=str,
+    parser.add_argument("--train_data_file", default="../dataset/NVD/my_train.jsonl", type=str,
                         help="The input training data file (a text file).")
-    parser.add_argument("--output_dir", default="./saved_models", type=str,
+    parser.add_argument("--output_dir", default="../saved_models", type=str,
                         help="The output directory where the model predictions and checkpoints will be written.")
 
     ## Other parameters
-    parser.add_argument("--eval_data_file", default="dataset/NVD/my_valid.jsonl", type=str,
+    parser.add_argument("--eval_data_file", default="../dataset/NVD/my_valid.jsonl", type=str,
                         help="An optional input evaluation data file to evaluate the perplexity on (a text file).")
-    parser.add_argument("--test_data_file", default="dataset/NVD/my_test.jsonl", type=str,
+    parser.add_argument("--test_data_file", default="../dataset/NVD/my_test.jsonl", type=str,
                         help="An optional input evaluation data file to evaluate the perplexity on (a text file).")
                     
     parser.add_argument("--model_type", default="roberta", type=str,
@@ -665,16 +700,16 @@ def main():
     parser.add_argument("--alpha_weight", default=1., type=float, help="percet of training sample")
 
     input_argument = [
-        "--output_dir", "outputs",  # All outputs saved here
+        "--output_dir", "../saved_models",  # All outputs saved here
         "--model_type", "roberta",
         "--tokenizer_name", "microsoft/graphcodebert-base",  
         "--model_name_or_path", "microsoft/graphcodebert-base",
         "--do_eval",
         "--do_test",
         "--do_train",
-        "--train_data_file", "dataset/NVD/my_train.jsonl",
-        "--eval_data_file", "dataset/NVD/my_valid.jsonl",
-        "--test_data_file", "dataset/NVD/my_test.jsonl",
+        "--train_data_file", "../dataset/NVD/my_train.jsonl",
+        "--eval_data_file", "../dataset/NVD/my_valid.jsonl",
+        "--test_data_file", "../dataset/NVD/my_test.jsonl",
         "--block_size", "200",        # Reduced from 400 to fix OOM
         "--train_batch_size", "8",    # Reduced from 16 to fix OOM
         "--eval_batch_size", "8",     # Reduced from 16 to fix OOM
@@ -683,7 +718,7 @@ def main():
         "--evaluate_during_training",
         "--gnn", "ReGCN",
         "--learning_rate", "5e-4",
-        "--epoch", "5",
+        "--epoch", "2", # [MODIFIED BY KHANG'S REQUEST] Changed from 5 to 2
         "--hidden_size", "128",
         "--num_GNN_layers", "2",
         "--seed", "123456",
@@ -813,5 +848,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

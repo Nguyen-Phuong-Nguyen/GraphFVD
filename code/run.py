@@ -14,7 +14,8 @@ import csv
 from torch.utils.data import DataLoader, Dataset, SequentialSampler, RandomSampler,TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 from torch_geometric.data import Data
-from sklearn.metrics import roc_auc_score
+# --- [MODIFIED BY KHANG'S REQUEST] Added confusion_matrix ---
+from sklearn.metrics import roc_auc_score, confusion_matrix 
 import json
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -477,6 +478,23 @@ def evaluate(args, eval_dataset, model, tokenizer, eval_when_training=False):
     labels = np.concatenate(labels,0)
     preds = logits[:,0]>0.5
 
+    # --- [MODIFIED BY KHANG'S REQUEST] Calculate and Print Confusion Matrix ---
+    try:
+        cm = confusion_matrix(labels, preds)
+        print("\n" + "="*40)
+        print(f" >>> CONFUSION MATRIX (Eval/Test) <<<")
+        print(f"[[TN, FP],\n [FN, TP]]")
+        print("-" * 20)
+        print(cm)
+        if cm.shape == (2, 2):
+            tn, fp, fn, tp = cm.ravel()
+            print(f"TN (Sạch-Đúng): {tn} | FP (Báo-Giả): {fp}")
+            print(f"FN (Sót-Lỗi):   {fn} | TP (Bắt-Lỗi): {tp}")
+        print("="*40 + "\n")
+    except Exception as e:
+        print(f"Error calculating Confusion Matrix: {e}")
+    # --------------------------------------------------------------------------
+
     eval_acc = np.mean(labels==preds)
     eval_loss = eval_loss / nb_eval_steps
     perplexity = torch.tensor(eval_loss)
@@ -529,6 +547,23 @@ def test(args, eval_dataset, model, tokenizer):
     logits=np.concatenate(logits,0)
     labels=np.concatenate(labels,0)
     preds=logits[:,0]>0.5
+
+    # --- [MODIFIED BY KHANG'S REQUEST] Calculate and Print Confusion Matrix for Test ---
+    try:
+        cm = confusion_matrix(labels, preds)
+        print("\n" + "="*40)
+        print(f" >>> TEST SET CONFUSION MATRIX <<<")
+        print(f"[[TN, FP],\n [FN, TP]]")
+        print("-" * 20)
+        print(cm)
+        if cm.shape == (2, 2):
+            tn, fp, fn, tp = cm.ravel()
+            print(f"TN (Sạch-Đúng): {tn} | FP (Báo-Giả): {fp}")
+            print(f"FN (Sót-Lỗi):   {fn} | TP (Bắt-Lỗi): {tp}")
+        print("="*40 + "\n")
+    except Exception as e:
+        print(f"Error calculating Confusion Matrix: {e}")
+    # -----------------------------------------------------------------------------------
 
     test_acc=np.mean(labels==preds)
     # 计算精确率和召回率，AUC
@@ -683,7 +718,7 @@ def main():
         "--evaluate_during_training",
         "--gnn", "ReGCN",
         "--learning_rate", "5e-4",
-        "--epoch", "5",
+        "--epoch", "2", # [MODIFIED BY KHANG'S REQUEST] Changed from 5 to 2
         "--hidden_size", "128",
         "--num_GNN_layers", "2",
         "--seed", "123456",
@@ -813,5 +848,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
