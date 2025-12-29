@@ -276,8 +276,9 @@ class RelationalGraphConvLayer(Module):
         weights = self.w.view(self.w.shape[0] * self.w.shape[1], self.w.shape[2])
         # Each relations * Weight
         supports = []
-        A = A.permute(1, 0, 2, 3)
-        for i in range(self.num_rel):
+        if A.dim() == 4:
+            A = A.permute(1, 0, 2, 3)
+        for i in range(self.num_relations):
             supports.append(torch.matmul(A[i].float(), X.float()))
 
         tmp = torch.cat(supports, dim=2)

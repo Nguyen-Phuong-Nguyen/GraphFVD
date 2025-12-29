@@ -85,7 +85,6 @@ class GNNReGVD(nn.Module):
 
     def forward(self, adj=None, adj_mask=None, adj_feature=None, labels=None):
         # run over GNNs
-        adj = torch.squeeze((adj))
         # Use float() instead of double() for better GPU compatibility
         outputs = self.gnn(adj_feature.to(device).float(), adj.to(device).float(), adj_mask.to(device).float())
         logits = self.classifier(outputs)
